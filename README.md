@@ -1,167 +1,106 @@
-# 🎯 Face Recognition Attendance System
+🧠 Face Recognition Attendance System
 
-An intelligent **attendance management system** built with Python and OpenCV.  
-It uses **face recognition**, **liveness detection**, and **geofencing (campus-boundary validation)** to mark attendance securely and automatically.
+An intelligent AI-powered attendance system that uses Face Recognition to automate attendance marking in real-time.
 
----
+This project eliminates manual attendance, reduces fraud, and provides a modern solution using Computer Vision + Machine Learning + Streamlit Web App.
 
-## 🧠 Features
 
-✅ **Admin Login System**  
-- Secure admin authentication using CSV-based user storage.  
-- Admin can add new users, change passwords, and reset credentials.  
+✨ Real-time face recognition
+🔐 Secure admin authentication
+📸 Face registration via camera
+🧠 ML model training (LBPH)
+📊 Attendance tracking & export
+🌐 Full Streamlit web dashboard
 
-✅ **Face Registration**  
-- Capture and store multiple face samples using a webcam.  
-- Saves faces under `faces/<username>/` for model retraining.  
 
-✅ **Model Training**  
-- Trains an OpenCV LBPH model on all registered user faces.  
-- Stores trained data in `trainer/trainer.yml`.  
+🏗️ Project Architecture
+User Face → Camera → Face Detection → Face Recognition → Attendance Logged → Dashboard
+🧩 Tech Stack
+Category	Technology
+Language	Python
+Computer Vision	OpenCV
+ML Model	LBPH Face Recognizer
+Data Handling	Pandas, NumPy
+GUI	Tkinter
+Web App	Streamlit
 
-✅ **Liveness Detection (Anti-Spoofing)**  
-- Uses **CVZone FaceMesh** to detect blinking and eye movement.  
-- Attendance is only marked when a **real, live face** is detected (prevents cheating with photos or videos).  
-- Ensures “live verification” before attendance is saved.  
 
-✅ **Geo-Fenced Attendance (Campus Boundary Check)**  
-- Attendance can only be marked **within the authorized campus area**.  
-- Uses geographic location (latitude, longitude) validation to confirm user is on-site.  
-- Prevents attendance marking from remote or off-campus locations.  
+Dependencies:
+📂 Project Structure
+├── streamlit_app.py        # Web app
+├── streamlit_core.py       # Core logic
+├── login_gui.py            # Login UI
+├── main_gui.py             # Dashboard
+├── register_face.py        # Face capture
+├── train_model.py          # Model training
+├── take_attendance.py      # Attendance system
+├── view_attendance.py      # Reports & export
+├── admin_utils.py          # Authentication system
+├── requirements.txt
+├── faces/
+├── trainer/
+├── attendance/
 
-✅ **Take Attendance**  
-- Recognizes faces in real time using webcam feed.  
-- Marks attendance only if both **liveness** and **location checks** pass.  
-- Stores results in `attendance/attendance_YYYY-MM-DD.csv`.
 
-✅ **View Attendance**  
-- View daily or historical attendance directly from the admin dashboard.  
-- Export data to CSV/Excel.
-
----
-
-## 🏗️ Project Structure
-
-```
-face_recognition_attendance/
-│
-├── admin_dashboard.py        # Admin dashboard for all core features
-├── login_gui.py              # Login page for admin access
-├── admin_utils.py            # Handles authentication & password management
-├── register_face.py          # Captures and saves user face images
-├── train_model.py            # Trains the face recognition model
-├── take_attendance.py        # Recognizes faces & records attendance
-├── view_attendance.py        # Displays attendance records
-├── liveness_check.py         # Detects blinking / liveness (anti-spoofing)
-├── location_utils.py         # Verifies geographic boundaries (campus check)
-│
-├── users.csv                 # Stores admin credentials
-├── attendance/               # Folder containing daily attendance CSVs
-└── faces/                    # Directory with face samples
-```
-
----
-
-## ⚙️ Installation
-
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/amnsingh05/face-recognition-attendance-system.git
-cd face_recognition_attendance
-```
-
-### 2️⃣ Install Dependencies
-Make sure Python 3.8+ is installed. Then run:
-```bash
-pip install opencv-python pandas numpy cvzone geopy
-```
-
-💡 *No need for dlib — this system is designed to work without it!*
-
----
-
-## 🚀 Usage Guide
-
-### 🧑‍💻 Step 1: Run the Admin Login
-```bash
-python login_gui.py
-```
-Default credentials:
-```
-Username: admin
-Password: 1234
-```
-
-### 🧍 Step 2: Register Faces
-- Click **“Register New Face”** and enter a username.  
-- The system captures 30 face samples automatically.
-
-### ⚙️ Step 3: Train the Model
-Click **“Train Model”** to update the trained dataset.
-
-### 🕵️ Step 4: Take Attendance
-- Click **“Take Attendance”**.  
-- System checks:
-  1. Live face detection (blink/eye movement).  
-  2. Geo-location inside campus.  
-  3. Face match confidence.  
-- Only after passing all checks, attendance is recorded.
-
-### 📋 Step 5: View Attendance
-Click **“View Attendance”** to view or export all attendance logs.
-
----
-
-## 🗺️ Example Geo-Fencing Configuration
-Campus boundary (example):
-```python
-CAMPUS_CENTER = (28.6139, 77.2090)  # Example: Delhi coordinates
-RADIUS_METERS = 100  # Attendance allowed within 100 meters
-```
-
-If the device location is outside this radius, attendance will not be marked.
-
----
-
-## 🧠 Technologies Used
-
-| Component | Technology |
-|------------|-------------|
-| GUI | Tkinter |
-| Face Detection | OpenCV (Haar Cascade + LBPH) |
-| Liveness Detection | CVZone (FaceMesh Eye Blink) |
-| Geo-Fencing | Geopy (Distance Validation) |
-| Data Storage | CSV (via Pandas) |
-| Language | Python 3 |
-
----
-
-## 📦 Dependencies
-```
-opencv-python
-pandas
-numpy
-cvzone
-geopy
-```
-
-Install all dependencies with:
-```bash
+⚙️ Installation
+git clone https://github.com/your-username/face-attendance-system.git
+cd face-attendance-system
 pip install -r requirements.txt
-```
+▶️ Run the Project
+🖥️ Desktop Version
+python login_gui.py
+🌐 Web Version
+streamlit run streamlit_app.py
 
----
+Open 👉 http://localhost:8501
 
-## 🧑‍💻 Authors
+🔑 Default Credentials
+Username: admin
+Password: admin123
 
-**Aaryan Sharma**  
-💼 [LinkedIn](https://www.linkedin.com/in/aaryan-sharma-a341a732b/)  
-📧 aaryansharma90898@gmail.com  
+⚠️ Change after first login (security best practice)
 
-**Aksh Jain**  
-💼 [LinkedIn](https://www.linkedin.com/in/aksh-jain-58a705203/)  
-📧 akshjainha@gmail.com  
+🔄 Workflow
+1. Login
+2. Register Face
+3. Train Model
+4. Take Attendance
+5. View Reports
+🔐 Security Features
+SHA-256 password hashing
+Secure login verification
+Security question-based reset
+📊 Output Example
+Name       Date        Time
+Aman       2026-04-16  10:32:45
+Rahul      2026-04-16  10:34:12
 
-**Aman Singh**  
-💼 [LinkedIn](https://www.linkedin.com/in/amnsingh0)  
-📧 amansinghakr@gmail.com  
+🎯 Use Cases
+🏫 Schools & Colleges
+🏢 Offices
+📚 Coaching Centers
+🧠 Smart AI Systems
+⚠️ Best Practices
+Use good lighting
+Capture 20–30 samples per person
+Retrain model after adding users
+Keep camera stable
+🌟 Future Improvements
+☁️ Cloud database (Firebase / MongoDB)
+📱 Mobile app integration
+😷 Mask detection
+📡 Multi-camera system
+🤖 AI analytics dashboard
+
+👨‍💻 Author
+Aman Singh
+
+
+⭐ Support
+If you like this project:
+👉 Star the repo
+👉 Fork it
+👉 Share it
+
+📜 License
+This project is licensed under the MIT License

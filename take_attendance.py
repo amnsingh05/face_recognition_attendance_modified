@@ -1,4 +1,4 @@
-﻿import cv2
+import cv2
 import os
 import datetime
 import pandas as pd
@@ -9,6 +9,7 @@ TRAINER_PATH = os.path.join(BASE_DIR, "trainer", "trainer.yml")
 LABELS_PATH = os.path.join(BASE_DIR, "trainer", "labels.csv")
 ATTENDANCE_DIR = os.path.join(BASE_DIR, "attendance")
 EXPECTED_COLUMNS = ["Name", "Date", "Time"]
+MODEL_IMAGE_SIZE = (200, 200)
 
 
 def get_today_attendance_file():
@@ -25,7 +26,10 @@ def load_label_map():
         try:
             labels_df = pd.read_csv(LABELS_PATH)
             if {"id", "name"}.issubset(labels_df.columns):
-                return {int(row["id"]): str(row["name"]) for _, row in labels_df.iterrows()}
+                return {
+                    int(row["id"]): str(row["name"])
+                    for _, row in labels_df.iterrows()
+                }
         except Exception:
             pass
 
@@ -41,46 +45,52 @@ def load_label_map():
 
 
 def mark_attendance(name, attendance_file):
+    name = str(name).strip()
+    if not name:
+        return False
+
     now = datetime.datetime.now()
     date = now.strftime("%Y-%m-%d")
-    time = now.strftime("%H:%M:%S")
+    current_time = now.strftime("%H:%M:%S")
 
     try:
         df = pd.read_csv(attendance_file)
     except Exception:
         df = pd.DataFrame(columns=EXPECTED_COLUMNS)
-        df.to_csv(attendance_file, index=False)
 
     if not set(EXPECTED_COLUMNS).issubset(df.columns):
         df = pd.DataFrame(columns=EXPECTED_COLUMNS)
-        df.to_csv(attendance_file, index=False)
+    else:
+        df = df[EXPECTED_COLUMNS].fillna("")
 
-    if ((df["Name"] == name) & (df["Date"] == date)).any():
+    same_name = df["Name"].astype(str).str.strip().str.lower() == name.lower()
+    same_date = df["Date"].astype(str).str.strip() == date
+    if (same_name & same_date).any():
         return False
 
-    new_row = pd.DataFrame([[name, date, time]], columns=EXPECTED_COLUMNS)
-    new_row.to_csv(attendance_file, mode="a", header=False, index=False)
-    print(f"Attendance marked for {name} at {time}")
+    df.loc[len(df)] = [name, date, current_time]
+    df.to_csv(attendance_file, index=False)
+    print(f"Attendance marked for {name} at {current_time}")
     return True
 
 
 def take_attendance():
     if not hasattr(cv2, "face"):
         print("OpenCV face module not found. Install opencv-contrib-python.")
-        return
+        return False
 
     if not os.path.exists(DATASET_DIR):
         print("Faces folder not found. Register users first.")
-        return
+        return False
 
     if not os.path.exists(TRAINER_PATH):
         print("trainer.yml not found. Train the model first.")
-        return
+        return False
 
     label_dict = load_label_map()
     if not label_dict:
         print("No user labels found. Train the model first.")
-        return
+        return False
 
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     recognizer.read(TRAINER_PATH)
@@ -90,14 +100,14 @@ def take_attendance():
     )
     if face_cascade.empty():
         print("Failed to load Haar cascade for face detection.")
-        return
+        return False
 
     attendance_file = get_today_attendance_file()
 
     cam = cv2.VideoCapture(0)
     if not cam.isOpened():
         print("Camera not accessible.")
-        return
+        return False
 
     print("Face attendance started. Press 'q' to quit.")
     marked_names = set()
@@ -111,7 +121,17 @@ def take_attendance():
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
         for (x, y, w, h) in faces:
-            detected_id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
+            face_region = gray[y:y + h, x:x + w]
+            if face_region.size == 0:
+                continue
+
+            face_region = cv2.resize(face_region, MODEL_IMAGE_SIZE)
+
+            try:
+                detected_id, confidence = recognizer.predict(face_region)
+            except cv2.error:
+                detected_id, confidence = -1, 999.0
+
             is_match = confidence < 80 and detected_id in label_dict
 
             if is_match:
@@ -123,10 +143,11 @@ def take_attendance():
                 name = "Unknown"
                 color = (0, 0, 255)
 
+            confidence_text = f"{confidence:.1f}" if confidence < 999 else "n/a"
             cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
             cv2.putText(
                 frame,
-                f"{name} ({confidence:.1f})",
+                f"{name} ({confidence_text})",
                 (x, y - 10),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
@@ -141,7 +162,8 @@ def take_attendance():
     cam.release()
     cv2.destroyAllWindows()
     print("Attendance recording stopped.")
+    return True
 
 
 if __name__ == "__main__":
-    take_attendance()
+    raise SystemExit(0 if take_attendance() else 1)

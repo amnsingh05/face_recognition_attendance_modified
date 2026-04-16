@@ -15,3 +15,6 @@ faces/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Windows reserved device names
+CON
