@@ -1,4 +1,4 @@
-opencv-contrib-python
+opencv-contrib-python-headless>=4.8,<5
 numpy
 pandas
 openpyxl

@@ -16,6 +16,7 @@ from streamlit_core import (
     ensure_directories,
     get_attendance_files,
     get_dashboard_stats,
+    get_opencv_status,
     get_today_attendance_file,
     list_registered_users,
     load_attendance_dataframe,
@@ -33,6 +34,7 @@ st.set_page_config(
 )
 
 ensure_directories()
+OPENCV_OK, OPENCV_MESSAGE = get_opencv_status()
 
 st.markdown(
     """
@@ -68,6 +70,17 @@ def _init_session_state():
 
 
 _init_session_state()
+
+
+def _render_opencv_banner():
+    if OPENCV_OK:
+        return
+
+    st.error(
+        "OpenCV failed to import in this deployment environment. "
+        "Face registration/training/attendance features will not work until dependency is fixed."
+    )
+    st.code(OPENCV_MESSAGE)
 
 
 def _render_login_page():
@@ -474,6 +487,8 @@ def _render_main_app():
 
 
 if not st.session_state.authenticated:
+    _render_opencv_banner()
     _render_login_page()
 else:
+    _render_opencv_banner()
     _render_main_app()

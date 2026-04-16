@@ -3,9 +3,15 @@ import os
 import re
 from io import BytesIO
 
-import cv2
 import numpy as np
 import pandas as pd
+
+try:
+    import cv2
+    CV2_IMPORT_ERROR = None
+except Exception as exc:
+    cv2 = None
+    CV2_IMPORT_ERROR = str(exc)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATASET_DIR = os.path.join(BASE_DIR, "faces")
@@ -17,6 +23,24 @@ ATTENDANCE_DIR = os.path.join(BASE_DIR, "attendance")
 EXPECTED_COLUMNS = ["Name", "Date", "Time"]
 MODEL_IMAGE_SIZE = (200, 200)
 NAME_PATTERN = re.compile(r"[^A-Za-z0-9_ ]+")
+
+
+def get_opencv_status():
+    if cv2 is None:
+        return (
+            False,
+            "OpenCV could not be imported. "
+            "For Streamlit Cloud use `opencv-contrib-python-headless`.\n"
+            f"Import error: {CV2_IMPORT_ERROR}",
+        )
+    return True, ""
+
+
+def _opencv_error_result(message):
+    return {
+        "success": False,
+        "message": message,
+    }
 
 
 def ensure_directories():
@@ -33,6 +57,9 @@ def sanitize_person_name(name):
 
 
 def _decode_image_to_bgr(image_input):
+    if cv2 is None:
+        return None
+
     if image_input is None:
         return None
 
@@ -58,6 +85,9 @@ def _decode_image_to_bgr(image_input):
 
 
 def _get_face_detector():
+    if cv2 is None:
+        return None
+
     detector = cv2.CascadeClassifier(
         cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
@@ -79,6 +109,10 @@ def _next_sample_number(person_dir):
 
 def save_face_sample(person_name, image_input):
     ensure_directories()
+
+    cv2_ok, cv2_message = get_opencv_status()
+    if not cv2_ok:
+        return _opencv_error_result(cv2_message)
 
     safe_name = sanitize_person_name(person_name)
     if not safe_name:
@@ -172,10 +206,14 @@ def count_face_samples(name=None):
 def train_model_from_dataset():
     ensure_directories()
 
+    cv2_ok, cv2_message = get_opencv_status()
+    if not cv2_ok:
+        return _opencv_error_result(cv2_message)
+
     if not hasattr(cv2, "face"):
         return {
             "success": False,
-            "message": "OpenCV face module missing. Install opencv-contrib-python.",
+            "message": "OpenCV face module missing. Install opencv-contrib-python-headless.",
         }
 
     recognizer = cv2.face.LBPHFaceRecognizer_create()
@@ -332,8 +370,12 @@ def load_attendance_dataframe(file_path):
 
 
 def _load_recognizer():
+    cv2_ok, cv2_message = get_opencv_status()
+    if not cv2_ok:
+        return None, cv2_message
+
     if not hasattr(cv2, "face"):
-        return None, "OpenCV face module missing. Install opencv-contrib-python."
+        return None, "OpenCV face module missing. Install opencv-contrib-python-headless."
 
     if not os.path.exists(TRAINER_PATH):
         return None, "Model not trained yet. Train model first."
