@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Generated data
+trainer/*.yml
+attendance/*.csv
+
+# Face images (privacy)
+faces/
+
+# OS files
+.DS_Store
+Thumbs.db
